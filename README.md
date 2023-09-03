@@ -1,4 +1,4 @@
-# Welcome to Remix!
+# Ins
 
 - [Remix Docs](https://remix.run/docs)
 
