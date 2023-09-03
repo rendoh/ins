@@ -7,7 +7,9 @@
     "dev": "remix dev --manual -c \"npm run start\"",
     "start": "wrangler pages dev --compatibility-date=2023-06-21 ./public",
     "typecheck": "tsc",
-    "pages:deploy": "npm run build && wrangler pages deploy ./public"
+    "pages:deploy": "npm run build && wrangler pages deploy ./public",
+    "lint": "eslint app",
+    "format": "prettier app --write"
   },
   "dependencies": {
     "@remix-run/cloudflare": "^1.19.3",
@@ -25,10 +27,12 @@
     "@types/react": "^18.0.35",
     "@types/react-dom": "^18.0.11",
     "eslint": "^8.38.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "prettier": "^3.0.3",
     "typescript": "^5.0.4",
     "wrangler": "^3.1.1"
   },
   "engines": {
-    "node": ">=16.13.0"
+    "node": ">=18.14.0"
   }
 }
