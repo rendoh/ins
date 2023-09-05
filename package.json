@@ -17,7 +17,8 @@
     "@remix-run/css-bundle": "^1.19.3",
     "@remix-run/react": "^1.19.3",
     "@supabase/auth-helpers-remix": "^0.2.1",
-    "@supabase/supabase-js": "^2.33.1",
+    "@supabase/auth-ui-react": "^0.4.4",
+    "@supabase/auth-ui-shared": "^0.1.6",
     "isbot": "^3.6.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

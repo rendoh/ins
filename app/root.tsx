@@ -1,17 +1,20 @@
-import type { LinksFunction } from '@remix-run/cloudflare';
+import { type LinksFunction } from '@remix-run/cloudflare';
 import { cssBundleHref } from '@remix-run/css-bundle';
 import {
   Links,
   LiveReload,
   Meta,
-  Outlet,
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
 
+import { rootLoader, RootOutlet } from './root.context';
+
 export const links: LinksFunction = () => [
   ...(cssBundleHref ? [{ rel: 'stylesheet', href: cssBundleHref }] : []),
 ];
+
+export const loader = rootLoader;
 
 export default function App() {
   return (
@@ -23,7 +26,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Outlet />
+        <RootOutlet />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

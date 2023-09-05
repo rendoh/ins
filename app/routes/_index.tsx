@@ -5,9 +5,12 @@ import {
 } from '@remix-run/cloudflare';
 import { useLoaderData } from '@remix-run/react';
 import { createServerClient } from '@supabase/auth-helpers-remix';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useEffect } from 'react';
 
 import type { Database } from '../../@types/schema';
+import { useBrowserClient, useUser } from '../root.context';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -26,6 +29,7 @@ export const loader = (async ({ context, request }) => {
       response,
     },
   );
+
   const { data, error } = await client.from('posts').select('*');
   if (error) {
     return json(
@@ -49,36 +53,27 @@ export const loader = (async ({ context, request }) => {
 export default function Index() {
   const posts = useLoaderData<typeof loader>();
   useEffect(() => {
-    console.log(posts);
+    // console.log(posts);
   }, [posts]);
+  const supabase = useBrowserClient();
+  const user = useUser();
+  // useEffect(() => {
+  //   supabase.auth.getUser().then((user) => {
+  //     console.log(user);
+  //   });
+  // }, [supabase.auth]);
+
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.8' }}>
       <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+      {user && <h2>Hello, {user.id}</h2>}
+      {!user && (
+        <Auth
+          supabaseClient={supabase}
+          appearance={{ theme: ThemeSupa }}
+          providers={[]}
+        />
+      )}
     </div>
   );
 }
