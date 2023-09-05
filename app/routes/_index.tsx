@@ -1,9 +1,13 @@
-import type { V2_MetaFunction } from '@remix-run/cloudflare';
+import {
+  json,
+  type LoaderFunction,
+  type V2_MetaFunction,
+} from '@remix-run/cloudflare';
 import { useLoaderData } from '@remix-run/react';
+import { createServerClient } from '@supabase/auth-helpers-remix';
 import { useEffect } from 'react';
 
-import { posts } from '../db/schema';
-import { createLoaderWithDb } from '../utils/loader';
+import type { Database } from '../../@types/schema';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -12,9 +16,35 @@ export const meta: V2_MetaFunction = () => {
   ];
 };
 
-export const loader = createLoaderWithDb(async ({ db }) => {
-  return db.select().from(posts);
-});
+export const loader = (async ({ context, request }) => {
+  const response = new Response();
+  const client = createServerClient<Database>(
+    context.env.SUPABASE_URL,
+    context.env.SUPABASE_ANON_KEY,
+    {
+      request,
+      response,
+    },
+  );
+  const { data, error } = await client.from('posts').select('*');
+  if (error) {
+    return json(
+      {},
+      {
+        headers: response.headers,
+        status: 400,
+      },
+    );
+  }
+  return json(
+    {
+      data,
+    },
+    {
+      headers: response.headers,
+    },
+  );
+}) satisfies LoaderFunction;
 
 export default function Index() {
   const posts = useLoaderData<typeof loader>();

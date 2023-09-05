@@ -8,5 +8,4 @@ node_modules
 .dev.vars
 
 .env
-/supabase
 .DS_Store
