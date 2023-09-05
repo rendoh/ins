@@ -7,4 +7,6 @@ node_modules
 /public/build
 .dev.vars
 
+.env
+/supabase
 .DS_Store

@@ -1,4 +1,9 @@
 import type { V2_MetaFunction } from '@remix-run/cloudflare';
+import { useLoaderData } from '@remix-run/react';
+import { useEffect } from 'react';
+
+import { posts } from '../db/schema';
+import { createLoaderWithDb } from '../utils/loader';
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -7,7 +12,15 @@ export const meta: V2_MetaFunction = () => {
   ];
 };
 
+export const loader = createLoaderWithDb(async ({ db }) => {
+  return db.select().from(posts);
+});
+
 export default function Index() {
+  const posts = useLoaderData<typeof loader>();
+  useEffect(() => {
+    console.log(posts);
+  }, [posts]);
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.8' }}>
       <h1>Welcome to Remix</h1>
