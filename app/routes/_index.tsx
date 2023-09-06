@@ -1,10 +1,6 @@
-import type {
-  ActionFunction,
-  LoaderFunction,
-  V2_MetaFunction,
-} from '@remix-run/cloudflare';
-import { json } from '@remix-run/cloudflare';
-import { Form, useLoaderData } from '@remix-run/react';
+import type { ActionFunction, V2_MetaFunction } from '@remix-run/cloudflare';
+import { json, redirect } from '@remix-run/cloudflare';
+import { Form } from '@remix-run/react';
 import type { SupabaseClient } from '@supabase/auth-helpers-remix';
 import { createServerClient } from '@supabase/auth-helpers-remix';
 import { Auth } from '@supabase/auth-ui-react';
@@ -21,42 +17,6 @@ export const meta: V2_MetaFunction = () => {
   ];
 };
 
-export const loader = (async ({ context, request }) => {
-  const response = new Response();
-  const client = createServerClient<Database>(
-    context.env.SUPABASE_URL,
-    context.env.SUPABASE_ANON_KEY,
-    {
-      request,
-      response,
-    },
-  );
-
-  const { data: posts, error } = await client
-    .from('posts')
-    .select('*')
-    .order('created_at', {
-      ascending: false,
-    });
-  if (error) {
-    return json(
-      { error },
-      {
-        headers: response.headers,
-        status: 400,
-      },
-    );
-  }
-  return json(
-    {
-      posts,
-    },
-    {
-      headers: response.headers,
-    },
-  );
-}) satisfies LoaderFunction;
-
 export const action = (async ({ context, request }) => {
   const response = new Response();
   const client = createServerClient<Database>(
@@ -69,11 +29,62 @@ export const action = (async ({ context, request }) => {
   );
   const {
     data: { user },
-    error: authError,
   } = await client.auth.getUser();
+  if (!user) {
+    return json(
+      {
+        error: 'no-user',
+      },
+      {
+        headers: response.headers,
+        status: 400,
+      },
+    );
+  }
+
+  const formData = await request.formData();
+  const file = formData.get('file');
+  if (!file || !(file instanceof File)) {
+    return json(
+      {
+        error: 'no-file',
+      },
+      {
+        headers: response.headers,
+        status: 400,
+      },
+    );
+  }
+  const random = Math.random().toString(36).slice(-8);
+  const filePath = `${user?.id ?? 'anon'}/${random}.${file.name
+    .split('.')
+    .pop()}`;
+  const { data } = await client.storage.from('posts').upload(filePath, file);
+
+  if (!data) {
+    return json(
+      {
+        error: 'no-data',
+      },
+      {
+        headers: response.headers,
+        status: 400,
+      },
+    );
+  }
+
+  const description = (() => {
+    const value = formData.get('description');
+    if (typeof value === 'string') {
+      return value;
+    }
+    return null;
+  })();
+
   const { error } = await client.from('posts').insert({
-    description: Math.random().toString(36).slice(-8),
-    user_id: user?.id,
+    description,
+    user_id: user.id,
+    object_path: data.path,
   });
 
   if (error) {
@@ -88,32 +99,27 @@ export const action = (async ({ context, request }) => {
     );
   }
 
-  return json(null, {
-    headers: response.headers,
-    status: 201,
-  });
+  const { data: profile } = await client
+    .from('profiles')
+    .select('username')
+    .eq('id', user.id)
+    .single();
+
+  return redirect(`/users/${profile?.username}`);
 }) satisfies ActionFunction;
 
 export default function Index() {
-  const loaderData = useLoaderData<typeof loader>();
   const supabase = useBrowserClient();
   const profile = useProfile();
-  const posts = 'posts' in loaderData ? loaderData.posts : [];
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.8' }}>
-      <h1>Welcome to Remix</h1>
-      {profile && <h2>Hello, {profile.username}</h2>}
-      {posts.map((post) => (
-        <div key={post.id}>
-          <p>{post.description ?? 'no-description'}</p>
-        </div>
-      ))}
-      {profile && (
-        <Form method="post">
-          <button type="submit">generate random post</button>
-        </Form>
-      )}
+      <h1>ins</h1>
+      <Form method="post" encType="multipart/form-data">
+        <input type="file" name="file" />
+        <textarea name="description"></textarea>
+        <button type="submit">upload</button>
+      </Form>
       {!profile && <AuthForm supabase={supabase} />}
     </div>
   );
@@ -123,7 +129,9 @@ function AuthForm({ supabase }: { supabase: SupabaseClient }) {
   const [username, setUsername] = useState('');
   return (
     <div>
+      <label htmlFor="username">username</label>
       <input
+        id="username"
         type="text"
         value={username}
         onChange={(e) => setUsername(e.target.value)}

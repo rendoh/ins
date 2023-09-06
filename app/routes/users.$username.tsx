@@ -4,6 +4,7 @@ import { useLoaderData } from '@remix-run/react';
 import { createServerClient } from '@supabase/auth-helpers-remix';
 
 import type { Database } from '../../@types/schema';
+import { useBrowserClient } from '../root.context';
 
 export const loader = (async ({ context, request, params }) => {
   const response = new Response();
@@ -50,12 +51,22 @@ export const loader = (async ({ context, request, params }) => {
 
 export default function UserPosts() {
   const { user, posts } = useLoaderData<typeof loader>();
+  const client = useBrowserClient();
   return (
     <div>
       <h1>{user.username}'s posts</h1>
       <div>
         {posts?.map((post) => (
           <div key={post.id}>
+            <img
+              src={(() => {
+                const {
+                  data: { publicUrl },
+                } = client.storage.from('posts').getPublicUrl(post.object_path);
+                return publicUrl;
+              })()}
+              alt=""
+            />
             <p>{post.description} </p>
           </div>
         ))}
