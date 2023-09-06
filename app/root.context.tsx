@@ -6,7 +6,6 @@ import {
   useOutletContext,
   useRevalidator,
 } from '@remix-run/react';
-import type { User } from '@supabase/auth-helpers-remix';
 import {
   createBrowserClient,
   createServerClient,
@@ -14,6 +13,7 @@ import {
 import { useEffect, useState } from 'react';
 
 import type { Database } from '../@types/schema';
+import type { Tables } from './utils/database-utils';
 
 /**
  * root コンポーネントでのBrowserClientやセッション管理
@@ -26,16 +26,14 @@ export const rootLoader = (async ({ request, context }) => {
     SUPABASE_ANON_KEY: context.env.SUPABASE_ANON_KEY,
   };
   const response = new Response();
-  const supabase = createServerClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
-    request,
-    response,
-  });
-  // const {
-  //   data: { session },
-  // } = await supabase.auth.getSession();
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser();
+  const supabase = createServerClient<Database>(
+    env.SUPABASE_URL,
+    env.SUPABASE_ANON_KEY,
+    {
+      request,
+      response,
+    },
+  );
   const [
     {
       data: { session },
@@ -45,8 +43,19 @@ export const rootLoader = (async ({ request, context }) => {
     },
   ] = await Promise.all([supabase.auth.getSession(), supabase.auth.getUser()]);
 
+  const profile = user
+    ? await (async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        return error ? null : data;
+      })()
+    : null;
+
   return json(
-    { env, session, user },
+    { env, session, profile },
     {
       headers: response.headers,
     },
@@ -61,7 +70,7 @@ function useSupabase(url: string, anonKey: string) {
 }
 
 export function RootOutlet() {
-  const { env, session, user } = useLoaderData<typeof rootLoader>();
+  const { env, session, profile } = useLoaderData<typeof rootLoader>();
   const supabase = useSupabase(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
   const { revalidate } = useRevalidator();
   const serverAccessToken = session?.access_token;
@@ -81,18 +90,18 @@ export function RootOutlet() {
     };
   }, [revalidate, serverAccessToken, supabase.auth]);
 
-  return <Outlet context={{ supabase, user } satisfies ContextType} />;
+  return <Outlet context={{ supabase, profile } satisfies ContextType} />;
 }
 
 type ContextType = {
   supabase: ReturnType<typeof useSupabase>;
-  user: User | null;
+  profile: Tables<'profiles'> | null;
 };
 
 export function useBrowserClient() {
   return useOutletContext<ContextType>().supabase;
 }
 
-export function useUser() {
-  return useOutletContext<ContextType>().user;
+export function useProfile() {
+  return useOutletContext<ContextType>().profile;
 }
