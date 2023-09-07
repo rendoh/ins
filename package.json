@@ -3,6 +3,7 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
+    "prepare": "panda codegen",
     "build": "remix build",
     "dev": "remix dev --manual -c \"npm run start\"",
     "start": "wrangler pages dev --compatibility-date=2023-06-21 ./public",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^3.19.0",
+    "@pandacss/dev": "^0.14.0",
     "@remix-run/dev": "^1.19.3",
     "@remix-run/eslint-config": "^1.19.3",
     "@types/react": "^18.0.35",
