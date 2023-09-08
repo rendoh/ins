@@ -1,6 +1,17 @@
-import { defineConfig } from '@pandacss/dev';
+import { defineConfig, defineGlobalStyles } from '@pandacss/dev';
+
+const globalCss = defineGlobalStyles({
+  body: {
+    lineHeight: 1.5,
+  },
+  button: {
+    cursor: 'pointer',
+  },
+});
 
 export default defineConfig({
+  globalCss,
+
   // Whether to use css reset
   preflight: true,
 

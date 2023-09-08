@@ -63,9 +63,9 @@ export const rootLoader = (async ({ request, context }) => {
 }) satisfies LoaderFunction;
 
 function useSupabase(url: string, anonKey: string) {
-  const [supabase] = useState(() =>
-    createBrowserClient<Database>(url, anonKey),
-  );
+  const [supabase] = useState(() => {
+    return createBrowserClient<Database>(url, anonKey);
+  });
   return supabase;
 }
 

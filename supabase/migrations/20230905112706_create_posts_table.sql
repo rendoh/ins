@@ -1,6 +1,6 @@
 CREATE TABLE public.posts (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    user_id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
+    user_id uuid NOT NULL REFERENCES public.profiles ON DELETE CASCADE,
     object_path text NOT NULL,
     created_at timestamp WITH time zone NOT NULL DEFAULT now(),
     description text NULL,
@@ -32,3 +32,4 @@ ON public.posts
 FOR DELETE
 TO authenticated
 USING ( auth.uid() = user_id );
+
