@@ -1,11 +1,12 @@
 import type { V2_MetaFunction } from '@remix-run/cloudflare';
 import { json, redirect } from '@remix-run/cloudflare';
-import { useLoaderData } from '@remix-run/react';
+import { useActionData, useLoaderData } from '@remix-run/react';
 import { withZod } from '@remix-validated-form/with-zod';
 import { ValidatedForm, validationError } from 'remix-validated-form';
 import { z } from 'zod';
 
 import { grid } from '../../styled-system/patterns';
+import { Alert } from '../components/Alert';
 import { Field } from '../components/Field';
 import { VfButton } from '../components/VfButton';
 import { VfInput } from '../components/VfInput';
@@ -128,7 +129,7 @@ export const action = withSupabaseClient(
     if (error) {
       return json(
         {
-          error,
+          error: error.message,
         },
         {
           headers: response.headers,
@@ -146,24 +147,28 @@ export const action = withSupabaseClient(
 export default function UserPosts() {
   const { user, posts } = useLoaderData<typeof loader>();
   const profile = useProfile();
+  const data = useActionData<typeof action>();
   return (
     <div>
       <h1>{user.username}'s posts</h1>
       {profile && profile.id === user.id && (
-        <ValidatedForm
-          validator={validator}
-          method="post"
-          encType="multipart/form-data"
-        >
-          <h2>Upload new photo</h2>
-          <Field label="Photo" htmlFor="file">
-            <VfInput type="file" name="file" id="file" />
-          </Field>
-          <Field label="Description" htmlFor="description">
-            <VfTextarea name="description" id="description"></VfTextarea>
-          </Field>
-          <VfButton>upload</VfButton>
-        </ValidatedForm>
+        <>
+          {data && 'error' in data && <Alert type="error">{data.error}</Alert>}
+          <ValidatedForm
+            validator={validator}
+            method="post"
+            encType="multipart/form-data"
+          >
+            <h2>Upload new photo</h2>
+            <Field label="Photo" htmlFor="file">
+              <VfInput type="file" name="file" id="file" />
+            </Field>
+            <Field label="Description" htmlFor="description">
+              <VfTextarea name="description" id="description"></VfTextarea>
+            </Field>
+            <VfButton>upload</VfButton>
+          </ValidatedForm>
+        </>
       )}
       <div
         className={grid({

@@ -25,20 +25,6 @@ export const loader = withSupabaseClient(
         }
       >();
 
-    console.log(JSON.stringify(post, null, 2));
-
-    // .select(
-    //   `
-    //     *,
-    //     profile:profiles(*)
-    //   `,
-    // )
-    // .returns<
-    //   (Tables<'posts'> & {
-    //     profile: Tables<'profiles'>;
-    //   })[]
-    // >();
-
     if (!post) {
       throw new Response(null, {
         status: 404,
