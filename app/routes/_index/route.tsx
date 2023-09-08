@@ -141,6 +141,9 @@ export const loader = withSupabaseClient(async ({ response, client }) => {
         profile:profiles(*)
       `,
     )
+    .order('created_at', {
+      ascending: false,
+    })
     .returns<
       (Tables<'posts'> & {
         profile: Tables<'profiles'>;
